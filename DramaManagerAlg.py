@@ -67,5 +67,10 @@ def train_algorithm():
     return algo
 
 
-algo = train_algorithm()
-algo.estimate(2, 1)
+def main():
+    algo = train_algorithm()
+    algo.estimate(2, 1)
+
+
+if __name__ == "__main__":
+    main()
