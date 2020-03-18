@@ -1,15 +1,16 @@
 import os
 from User import User
 from story_printer import StoryPrinter
-# from DramaManagerAlg import DramaManagerAlg
+from DramaManagerAlg import train_algorithm
 
 
 class MissingGame():
     def __init__(self, user_id):
-        self.indexes = [
+        self.indeces = [
             'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
             'n'
         ]
+        self.users = ["U{}".format(i) for i in range(1, 11)]
         self.index_experienced = list()
         # alg = DramaManagerAlg()
         # Init current index
@@ -23,8 +24,7 @@ class MissingGame():
         self.index_experienced.append('a')
 
         # Do some algorithm stuff
-        # alg =
-        # alg.fit
+        algo = train_algorithm()
 
         story_printer = StoryPrinter(self.user.current_index)
         choice = 0
@@ -32,7 +32,8 @@ class MissingGame():
             try:
                 choice = int(input())
                 if choice == 1:
-                    # Do some algorithm stuff
+                    algo.estimate(self.users.index(self.user.userID),
+                                  self.indeces.index(self.user.current_index))
                     pass
                 elif choice == 2:
                     # Do some other algorithm stuff

@@ -1,10 +1,8 @@
 import os
 from numpy import mean
-from surprise import BaselineOnly
-from surprise import Dataset
-from surprise import AlgoBase
-from surprise import Reader
-from surprise import PredictionImpossible
+from surprise import (BaselineOnly, Dataset, AlgoBase, Reader,
+                      PredictionImpossible)
+from surprise.model_selection import cross_validate
 
 
 class DramaManagerAlg(AlgoBase):
@@ -14,94 +12,60 @@ class DramaManagerAlg(AlgoBase):
     .. autosummary ..
         :no signatures:
 
-        Predict (Takes in User in current index and data)
+        Predict (Takes in u in current i and data)
 
 
     """
-
-    #Set definition and format of dataset
-    file_path = os.path.expanduser('.data/UserData.csv')
-    reader = Reader(
-        line_format=
-        'index userID funvalue attack magic armour skill Ny_Know Pm_Know El_Know Br_Know',
-        sep='\t',
-        rating_scale=(-30, 30))
-    UserData = Dataset.load_from_file(file_path, reader=reader)
-
-    def __init__(self, sim_options={'name': 'cosine', 'User_based': True}):
+    def __init__(self, sim_options={'name': 'cosine', 'u_based': True}):
         AlgoBase.__init__(self, sim_options=sim_options)
 
-    def fit(self, trainset):
-        Algobase.fit(self, UserData)
+        # Build an algorithm, and train it.
 
-        #Compute similarites and baseline
+    def fit(self, trainset):
+        AlgoBase.fit(self, trainset)
+
+        # Compute similarites and baseline
         self.bu, self.bi = self.compute_baselines()
         self.sim = self.compute_similarities()
-
+        self.the_mean = mean([r for (_, _, r) in self.trainset.all_ratings()])
         return self
 
-    def estimate(self, User, index):
+    def estimate(self, u, i):
+        # This is an internal suprise function, you can't use your
+        # own classes as input or for raising prediction impossible
 
-        #Catch Impossible predictions
-        if not (self.UserData.knows_user(User)
-                and self.UserData.knows_item(i)):
-            raise PredictionImpossible('User and or Item are unknown')
-        elif User.currentIndex == a and not (index == b):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == b and not (index == c):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == c and not (index == d):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == d and not (index == g):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == e and not (index == h or index == i):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == f and not (index == j or index == k):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == g:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
-        elif User.currentIndex == h and not (index == n):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == i and not (index == n or index == l):
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree')
-        elif User.currentIndex == j:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
-        elif User.currentIndex == k:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
-        elif User.currentIndex == n:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
-        elif User.currentIndex == m:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
-        elif User.currentIndex == l:
-            raise PredictionImpossible(
-                'User current Index and Prediction invalid due to tree - End Index'
-            )
+        # Catch Impossible predictions
+        if not (self.trainset.knows_user(u) and self.trainset.knows_item(i)):
+            raise PredictionImpossible('u and or Item are unknown')
 
-        neighbours = [(v, self.sim[User, v])
-                      for (v, r) in self.UserData.ir[index]]
+        neighbours = [(v, self.sim[u, v]) for (v, r) in self.trainset.ir[i]]
         neighbours = sorted(neighbours, key=lambda x: x[1], reverse=True)
 
-        print('The 3 nearest neighbours of user', str(User.userID), 'are:')
-        for v, sim_Userv in neighbours[:3]:
-            print('user {0:} with sim {1:1.2f}'.format(v, sim_Userv))
-
-        prediction = mean(sim_Userv for (v, sim_Userv) in neighbours[:3])
+        print('The 3 nearest neighbours of user', str(u), 'are:')
+        for v, sim_uv in neighbours[:3]:
+            print('user {0:} with sim {1:1.2f}'.format(v, sim_uv))
+        # Mean
+        prediction = sum(sim_uv
+                         for v, sim_uv in neighbours[:3]) / len(neighbours)
         return prediction
+
+
+def train_algorithm():
+    # Lines in reader must have keywords (user, item, rating)
+    # Not entirely sure about multiple ratings
+    reader = Reader(
+        line_format=
+        'item user rating rating rating rating rating rating rating rating rating',
+        sep=',',
+        rating_scale=(-30, 30))
+    data = Dataset.load_from_file('./data/UserData.csv', reader=reader)
+    # Data not loading more than one rating!!!
+    for r in data.raw_ratings:
+        print(r)
+    algo = DramaManagerAlg()
+    cross_validate(algo, data)
+    return algo
+
+
+algo = train_algorithm()
+algo.estimate(2, 1)
