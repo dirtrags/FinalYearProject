@@ -41,35 +41,38 @@ class DramaManagerAlg(AlgoBase):
         neighbours = [(v, self.sim[u, v]) for (v, r) in self.trainset.ir[i]]
         neighbours = sorted(neighbours, key=lambda x: x[1], reverse=True)
 
-        print('The 3 nearest neighbours of user', str(u), 'are:')
-        for v, sim_uv in neighbours[:3]:
-            print('user {0:} with sim {1:1.2f}'.format(v, sim_uv))
+        # print('The 3 nearest neighbours of user', str(u), 'are:')
+        # for v, sim_uv in neighbours[:3]:
+        #     print('user {0:} with sim {1:1.2f}'.format(v, sim_uv))
         # Mean
         prediction = sum(sim_uv
                          for v, sim_uv in neighbours[:3]) / len(neighbours)
         return prediction
 
 
-def train_algorithm():
-    # Lines in reader must have keywords (user, item, rating)
-    # Not entirely sure about multiple ratings
-    reader = Reader(
-        line_format=
-        'item user rating rating rating rating rating rating rating rating rating',
-        sep=',',
-        rating_scale=(-30, 30))
-    data = Dataset.load_from_file('./data/UserData.csv', reader=reader)
-    # Data not loading more than one rating!!!
-    for r in data.raw_ratings:
-        print(r)
-    algo = DramaManagerAlg()
-    cross_validate(algo, data)
-    return algo
+def train_algorithms():
+    """
+    train one algorithm for each rating and return an array with each one.
+    Algorithms in the array in the same order as the ratings
+    """
+    algorithms = list()
+    for r in range(1, 10):
+        # For each rating
+        reader = Reader(line_format='item user rating',
+                        sep=',',
+                        rating_scale=(-30, 30))
+        data = Dataset.load_from_file('./data/data_rating{}.csv'.format(r),
+                                      reader=reader)
+        # Initialise custom algorithm
+        algo = DramaManagerAlg()
+        # Run algorithm
+        cross_validate(algo, data)
+        algorithms.append(algo)
+    return algorithms
 
 
 def main():
-    algo = train_algorithm()
-    algo.estimate(2, 1)
+    train_algorithms()
 
 
 if __name__ == "__main__":
